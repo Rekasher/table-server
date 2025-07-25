@@ -1,3 +1,3 @@
 export const pagination = {
-  take: 10,
+  take: 7,
 };

@@ -9,13 +9,15 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { TableService } from './table.service';
-import { Table } from '../../db/table-entity/table-entity';
-import { DeepPartial } from 'typeorm';
+import {TableService} from './table.service';
+import {Table} from '../../db/table-entity/table-entity';
+import {DeepPartial} from 'typeorm';
+import {SortType} from "./utils/types";
 
 @Controller('table')
 export class TableController {
-  constructor(private readonly tableService: TableService) {}
+  constructor(private readonly tableService: TableService) {
+  }
 
   @Post('create')
   async create(@Body() data: DeepPartial<Table>) {
@@ -27,9 +29,14 @@ export class TableController {
   }
 
   @Get('get')
-  async getTable(@Query('page') page: number): Promise<[Table[], number]> {
+  async getTable(
+    @Query('page') page: number,
+    @Query('search') search?: string,
+    @Query('sortField') sortField?: keyof Table,
+    @Query('sortOrder') sortOrder?: SortType
+  ): Promise<[Table[], number]> {
     try {
-      return this.tableService.get(page);
+      return this.tableService.get(+page || 1, search, sortField ?? 'id', sortOrder ?? 'ASC');
     } catch (error) {
       throw new BadRequestException(error);
     }

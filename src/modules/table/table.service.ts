@@ -6,7 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Table } from '../../db/table-entity/table-entity';
 import { DeepPartial, Repository } from 'typeorm';
-import { pagination } from './constants';
+import { pagination } from './utils/constants';
+import {SortType} from "./utils/types";
 
 @Injectable()
 export class TableService {
@@ -24,18 +25,45 @@ export class TableService {
     }
   }
 
-  async get(page: number): Promise<[Table[], number]> {
+  async get(
+    page: number,
+    search?: string,
+    sortField: keyof Table = 'id',
+    sortOrder: 'ASC' | 'DESC' = 'ASC',
+  ): Promise<[Table[], number]> {
     try {
       const take = pagination.take;
       const skip = (page - 1) * take;
-      return await this.tableRepository.findAndCount({
-        skip,
-        take,
-      });
+
+      const allowedFields = ['id', 'name', 'code', 'date'] as const;
+      if (!allowedFields.includes(sortField)) {
+        throw new BadRequestException('Invalid sort field');
+      }
+
+      const queryBuilder = this.tableRepository.createQueryBuilder('table');
+
+      if (search) {
+        queryBuilder.where(
+          'LOWER(table.name) LIKE :search OR ' +
+          'CAST(table.code AS TEXT) LIKE :search OR ' +
+          'CAST(table.date AS TEXT) LIKE :search',
+          { search: `%${search.toLowerCase()}%` },
+        );
+      }
+
+      queryBuilder
+        .orderBy(`table.${sortField}`, sortOrder)
+        .skip(skip)
+        .take(take);
+
+      const [result, count] = await queryBuilder.getManyAndCount();
+      return [result, count];
     } catch (error) {
       throw new NotFoundException(error);
     }
   }
+
+
 
   async update(id: number, data: DeepPartial<Table>) {
     try {
