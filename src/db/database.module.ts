@@ -8,13 +8,16 @@ import { Table } from './table-entity/table-entity';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: env.DATABASE_HOST,
-      port: env.DOCKER_PORT ?? 5432,
+      port: env.DATABASE_PORT,
       username: env.DATABASE_USER,
       password: env.DATABASE_PASSWORD,
       database: env.DATABASE_NAME,
       entities: [Table],
       synchronize: true,
       autoLoadEntities: true,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     }),
   ],
 })
