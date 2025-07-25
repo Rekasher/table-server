@@ -14,10 +14,6 @@ import { Table } from './table-entity/table-entity';
       database: env.DATABASE_NAME,
       entities: [Table],
       synchronize: true,
-      autoLoadEntities: true,
-      ssl: {
-        rejectUnauthorized: false,
-      },
     }),
   ],
 })
